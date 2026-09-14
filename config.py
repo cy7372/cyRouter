@@ -19,9 +19,16 @@ def _app_dir() -> Path:
 def _data_dir() -> Path:
     """Return the data directory, creating it if necessary.
 
+    CYROUTER_DATA_DIR env overrides everything (server deployments put
+    data on a separate volume without touching the app directory).
     Falls back to %APPDATA%/cyRouter/data when the exe's own directory
     isn't writable (e.g. Program Files on end-user machines).
     """
+    env = _os.environ.get("CYROUTER_DATA_DIR")
+    if env:
+        p = Path(env)
+        p.mkdir(parents=True, exist_ok=True)
+        return p
     default = _app_dir() / "data"
     try:
         default.mkdir(parents=True, exist_ok=True)

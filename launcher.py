@@ -20,6 +20,13 @@ if _root not in sys.path:
 import builtins
 builtins.__package__ = None
 
+# CLI 转发: cyRouter.exe key list / config set / providers …
+# （argv[1] 是子命令时走 CLI，否则正常起服务）
+if len(sys.argv) > 1 and sys.argv[1] in ("key", "keys", "config", "providers", "provider"):
+    import cli  # noqa: E402
+
+    sys.exit(cli.main(sys.argv[1:]))
+
 import main  # noqa: E402  (must run after __package__ reset above)
 
 main.main()

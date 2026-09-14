@@ -10,7 +10,7 @@ Do NOT edit BUILD by hand unless you know what you're doing.
 MAJOR = 1
 MINOR = 2
 PATCH = 0
-BUILD = 15
+BUILD = 17
 
 VERSION_TUPLE = (MAJOR, MINOR, PATCH, BUILD)
 

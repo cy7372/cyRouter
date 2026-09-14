@@ -1,0 +1,60 @@
+- generic [active] [ref=e1]:
+  - complementary [ref=e2]:
+    - generic [ref=e3]:
+      - generic [ref=e4]: cyRouter
+      - generic [ref=e5]: LLM API Router v1.0
+    - navigation [ref=e6]:
+      - generic [ref=e7] [cursor=pointer]: 总览
+      - generic [ref=e13]:
+        - generic [ref=e14] [cursor=pointer]: 模型配置
+        - generic [ref=e21]:
+          - generic [ref=e22] [cursor=pointer]: 供应商
+          - generic [ref=e23] [cursor=pointer]: 模型列表
+          - generic [ref=e24] [cursor=pointer]: Auto 路由
+      - generic [ref=e25] [cursor=pointer]: 请求日志
+      - generic [ref=e29] [cursor=pointer]: Token 统计
+      - generic [ref=e31] [cursor=pointer]: 密钥管理
+      - generic [ref=e34] [cursor=pointer]: 测试对话
+    - generic [ref=e37]: 运行中
+  - main [ref=e41]:
+    - generic [ref=e42]:
+      - heading "总览" [level=1] [ref=e43]
+      - generic [ref=e44]:
+        - generic [ref=e45]:
+          - generic [ref=e46]: 今日费用
+          - generic [ref=e47]: —
+        - generic [ref=e48]:
+          - generic [ref=e49]: 今日 Token
+          - generic [ref=e50]: —
+        - generic [ref=e51]:
+          - generic [ref=e52]: 缓存命中
+          - generic [ref=e53]: —
+        - generic [ref=e54]:
+          - generic [ref=e55]: 近 7 天
+          - generic [ref=e56]: ¥0.00
+          - generic [ref=e57]: 0 / 0 请求
+      - generic [ref=e58]:
+        - generic [ref=e59]: API
+        - code [ref=e60]: http://localhost:20108/v1
+        - code [ref=e61]: http://localhost:20108/anthropic
+      - heading "供应商状态 →" [level=2] [ref=e62] [cursor=pointer]
+      - generic [ref=e63]: 暂无供应商，请先添加
+      - heading "今日用量 按模型" [level=2] [ref=e65]
+      - table [ref=e67]:
+        - rowgroup [ref=e68]:
+          - row [ref=e69]:
+            - columnheader "模型" [ref=e70]
+            - columnheader "请求数" [ref=e71]
+            - columnheader "输入" [ref=e72]
+            - columnheader "输出" [ref=e73]
+            - columnheader "缓存读取" [ref=e74]
+            - columnheader "费用" [ref=e75]
+        - rowgroup [ref=e76]:
+          - row [ref=e77]:
+            - cell "暂无数据" [ref=e78]
+      - generic [ref=e79]:
+        - heading "每日费用走势" [level=2] [ref=e80]
+        - generic [ref=e81]:
+          - button "上一月" [ref=e82] [cursor=pointer]: ◀
+          - generic [ref=e83]: 本月
+          - button "下一月" [disabled] [ref=e84] [cursor=pointer]: ▶

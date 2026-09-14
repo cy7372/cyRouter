@@ -1,0 +1,63 @@
+- generic [active] [ref=f2e1]:
+  - complementary [ref=f2e2]:
+    - generic [ref=f2e3]:
+      - generic [ref=f2e4]: cyRouter
+      - generic [ref=f2e5]: LLM API Router v1.0
+    - navigation [ref=f2e6]:
+      - generic [ref=f2e7] [cursor=pointer]: 总览
+      - generic [ref=f2e13]:
+        - generic [ref=f2e14] [cursor=pointer]: 模型配置
+        - generic [ref=f2e21]:
+          - generic [ref=f2e22] [cursor=pointer]: 供应商
+          - generic [ref=f2e23] [cursor=pointer]: 模型列表
+          - generic [ref=f2e24] [cursor=pointer]: Auto 路由
+      - generic [ref=f2e25] [cursor=pointer]: 请求日志
+      - generic [ref=f2e29] [cursor=pointer]: Token 统计
+      - generic [ref=f2e31] [cursor=pointer]: 密钥管理
+      - generic [ref=f2e34] [cursor=pointer]: 测试对话
+    - generic [ref=f2e37]: 运行中
+  - main [ref=f2e41]:
+    - generic [ref=f2e42]:
+      - heading "总览" [level=1] [ref=f2e43]
+      - generic [ref=f2e44]:
+        - generic [ref=f2e45]:
+          - generic [ref=f2e46]: 今日费用
+          - generic [ref=f2e47]: —
+        - generic [ref=f2e48]:
+          - generic [ref=f2e49]: 今日 Token
+          - generic [ref=f2e50]: —
+        - generic [ref=f2e51]:
+          - generic [ref=f2e52]: 缓存命中
+          - generic [ref=f2e53]: —
+        - generic [ref=f2e54]:
+          - generic [ref=f2e55]: 近 7 天
+          - generic [ref=f2e56]: ¥0.00
+          - generic [ref=f2e57]: 0 / 0 请求
+      - generic [ref=f2e58]:
+        - generic "点击复制" [ref=f2e59] [cursor=pointer]:
+          - generic [ref=f2e60]: OpenAI API
+          - code [ref=f2e65]: http://localhost:20108/v1
+        - generic "点击复制" [ref=f2e69] [cursor=pointer]:
+          - generic [ref=f2e70]: Anthropic API
+          - code [ref=f2e75]: http://localhost:20108/anthropic
+      - heading "供应商状态 →" [level=2] [ref=f2e79] [cursor=pointer]
+      - generic [ref=f2e80]: 暂无供应商，请先添加
+      - heading "今日用量 按模型" [level=2] [ref=f2e82]
+      - table [ref=f2e84]:
+        - rowgroup [ref=f2e85]:
+          - row [ref=f2e86]:
+            - columnheader "模型" [ref=f2e87]
+            - columnheader "请求数" [ref=f2e88]
+            - columnheader "输入" [ref=f2e89]
+            - columnheader "输出" [ref=f2e90]
+            - columnheader "缓存读取" [ref=f2e91]
+            - columnheader "费用" [ref=f2e92]
+        - rowgroup [ref=f2e93]:
+          - row [ref=f2e94]:
+            - cell "暂无数据" [ref=f2e95]
+      - generic [ref=f2e96]:
+        - heading "每日费用走势" [level=2] [ref=f2e97]
+        - generic [ref=f2e98]:
+          - button "上一月" [ref=f2e99] [cursor=pointer]: ◀
+          - generic [ref=f2e100]: 本月
+          - button "下一月" [disabled] [ref=f2e101] [cursor=pointer]: ▶

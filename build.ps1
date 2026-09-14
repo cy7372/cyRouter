@@ -248,18 +248,34 @@ if (-not (Test-Path $ReleaseDir)) {
     New-Item -ItemType Directory -Path $ReleaseDir -Force | Out-Null
 }
 
-# Copy the bare exe
-Copy-Item $exe "$ReleaseDir/cyRouter.exe" -Force
-Write-Host "    cyRouter.exe → $ReleaseDir/" -ForegroundColor Green
+# Deploy guard: 生产 exe 常被 Servy 服务进程占用（在线运行），Copy 失败不致命——
+# 构建产物已完整存在于 dist/ 与 Output/；部署滚动：停服务 → 手动拷贝（或重跑 build.ps1，BUILD 会再+1）→ 启服务
+$deployOk = $true
+try {
+    # Copy the bare exe
+    Copy-Item $exe "$ReleaseDir/cyRouter.exe" -Force
+    Write-Host "    cyRouter.exe → $ReleaseDir/" -ForegroundColor Green
+} catch {
+    $deployOk = $false
+    Write-Host "    ⚠ cyRouter.exe 被占用（服务运行中）→ 跳过部署，产物在 dist/ 与 Output/" -ForegroundColor Yellow
+}
 
 # Copy the installer if produced, adding version to filename
-if ($setupExe) {
+if ($setupExe -and $deployOk) {
     $verName = "cyRouter-Setup-v$Version.exe"
-    Copy-Item $setupExe "$ReleaseDir/$verName" -Force
-    Write-Host "    $verName → $ReleaseDir/" -ForegroundColor Green
+    try {
+        Copy-Item $setupExe "$ReleaseDir/$verName" -Force
+        Write-Host "    $verName → $ReleaseDir/" -ForegroundColor Green
+    } catch {
+        $deployOk = $false
+        Write-Host "    ⚠ $verName 拷贝失败 → 跳过部署与 version.json" -ForegroundColor Yellow
+    }
 }
 
 # ── 5.5. Generate version.json + prune old installers ───────────────
+if (-not $deployOk) {
+    Write-Host "    （部署未完成，跳过 version.json 与 prune，防清单指向未部署版本）" -ForegroundColor Yellow
+} else {
 # version.json is a lightweight update manifest. It lives at the Release
 # ROOT (parent of the cyRouter/ subdir) so nginx can serve it as a single
 # top-level file. Paths inside are relative to the Release root.
@@ -291,6 +307,7 @@ if (-not $NoPrune) {
         Remove-Item -LiteralPath $f.FullName -Force
         Write-Host "    Pruned old: $($f.Name)" -ForegroundColor DarkGray
     }
+}
 }
 
 # ── 5.7 Sync settings into the release data dir (2026-09-14) ────────

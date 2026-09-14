@@ -13,7 +13,7 @@
 #define MyAppName "cyRouter"
 ; NOTE: MyAppVersion is overwritten by build.ps1 on every build, sourced
 ;       from version.py (the single source of truth). Do not edit by hand.
-#define MyAppVersion "1.2.0.14"
+#define MyAppVersion "1.2.0.16"
 #define MyAppPublisher "cyRouter"
 #define MyAppExeName "cyRouter.exe"
 #define MyAppURL "https://github.com/anomalyco/cyRouter"

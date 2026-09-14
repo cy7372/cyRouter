@@ -106,6 +106,52 @@ logging.basicConfig(
 )
 logger = logging.getLogger("cyRouter")
 
+# ── Update check（内置更新检查）────────────────────────────
+# 启动后查一次 + 每 24h 查自托管 version.json（发布链 build.ps1 自动产出；
+# nginx 白名单路径免鉴权）。结果挂在 /health.latest 供上游/监控消费。
+# 检查失败静默（离线机器不影响服务）。env CYROUTER_UPDATE_URL 可覆盖端点。
+_UPDATE_URL = os.environ.get(
+    "CYROUTER_UPDATE_URL", "https://pub.cyyu.me:8443/release/files/version.json"
+)
+_update_state = {"latest_version": None, "update_available": False,
+                 "checked_at": None, "error": None,
+                 "hint": "Windows: Setup.exe 覆盖装 / Linux: installer.sh --update"}
+
+
+def _version_tuple(s: str):
+    """'1.2.0.16' → (1,2,0,16)；非数字段容错归 0。"""
+    parts = []
+    for seg in str(s).lstrip("v").split("."):
+        try:
+            parts.append(int(seg))
+        except ValueError:
+            parts.append(0)
+    return tuple(parts) or (0,)
+
+
+async def _update_check_once() -> None:
+    try:
+        client = _http_client or _make_async_client(trust_env=True)
+        resp = await client.get(_UPDATE_URL, timeout=10.0)
+        resp.raise_for_status()
+        latest = resp.json().get("version")
+        if not latest:
+            raise ValueError("manifest 无 version 字段")
+        _update_state["latest_version"] = latest
+        _update_state["update_available"] = _version_tuple(latest) > _version_tuple(__display_version__)
+        _update_state["checked_at"] = time.time()
+        _update_state["error"] = None
+        if _update_state["update_available"]:
+            logger.info("更新可用: %s → %s（%s）", __display_version__, latest, _update_state["hint"])
+    except Exception as exc:  # noqa: BLE001 — 更新检查失败不得影响服务
+        _update_state["error"] = f"{type(exc).__name__}: {exc}"
+
+
+async def _update_check_loop() -> None:
+    while True:
+        await _update_check_once()
+        await asyncio.sleep(24 * 3600)
+
 # Silence high-volume third-party loggers: httpx logs every HTTP request at INFO
 # (tens of lines per client call), drowning real warnings in server-err.log.
 # asyncio WARNING filters Windows ProactorBasePipeTransport connection-lost noise.
@@ -619,6 +665,8 @@ async def _lifespan(app: FastAPI):
     # pricing_check.auto_adopt is on, adopts CNY single-value diffs into
     # existing user pricing entries within guard rails.
     _spawn_background(_pricing_check_loop())
+    # Update check：启动即查 + 24h 周期（/health.latest 暴露）
+    _spawn_background(_update_check_loop())
 
     yield
     if _http_client and not _http_client.is_closed:
@@ -670,6 +718,7 @@ async def health():
         "version": __display_version__,
         "timestamp": time.time(),
         "uptime_seconds": int(time.time() - _start_time),
+        "latest": _update_state,
     }
 
 
