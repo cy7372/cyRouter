@@ -1,0 +1,49 @@
+__pycache__/
+*.pyc
+data/*.jsonl
+data/*.json
+logs/
+temp_*.js
+*_test.json
+*_test.jsonl
+
+# Build artifacts
+build/
+dist/
+Output/
+packaging/version_info.txt
+
+# pi-auto-backup managed block
+# Windows reserved device names — git cannot read these files
+nul
+con
+aux
+prn
+com1
+com2
+com3
+com4
+lpt1
+lpt2
+lpt3
+
+# Volatile runtime files
+*.db-wal
+*.db-shm
+*.recovery-*
+
+# 临时备份文件(可能含明文密钥,勿入库)
+*.bak*
+*.bak
+data/*.bak.*
+data/blackbox/
+data/*.bak
+data/config.json.*-bak
+
+# debug residue with secrets (2026-09-14, never track again)
+_rk*.txt
+_hdr*.txt
+_ip*.txt
+_a.json
+
+.playwright-mcp/
