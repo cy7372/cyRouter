@@ -107,6 +107,16 @@ def load_config() -> dict:
     # Backfill port if missing from an older config file
     if "port" not in cfg:
         cfg["port"] = DEFAULT_PORT
+    # admin_token 自动生成（2026-09-14 多用户服务器：/api/* 管理端点须鉴权，
+    # 零配置安全默认；env CYROUTER_ADMIN_TOKEN 可覆盖）
+    if not cfg.get("admin_token") and not _os.environ.get("CYROUTER_ADMIN_TOKEN"):
+        import secrets as _secrets
+
+        cfg["admin_token"] = _secrets.token_urlsafe(32)
+        try:
+            save_config(cfg)
+        except OSError:
+            pass  # 只读环境：内存态 token 有效至重启
     _config_cache = cfg
     _config_cache_ts = time.time()
     return cfg

@@ -726,6 +726,30 @@ async def health():
 
 
 @app.middleware("http")
+async def admin_api_guard(request: Request, call_next):
+    """Require X-Admin-Token on every /api/* management endpoint.
+
+    2026-09-14: D02 became a multi-user AI server — an unauthenticated
+    localhost admin API means any local user can create/reveal/revoke keys
+    and rewrite routing config.  Token auto-generated in config.json
+    (config.load_config) or set via CYROUTER_ADMIN_TOKEN env.
+    """
+    if request.url.path.startswith("/api/"):
+        admin = os.environ.get("CYROUTER_ADMIN_TOKEN") or load_config().get(
+            "admin_token", ""
+        )
+        if not admin:
+            return JSONResponse(
+                {"error": "admin_token not configured"}, status_code=503
+            )
+        if request.headers.get("x-admin-token", "") != admin:
+            return JSONResponse(
+                {"error": "invalid or missing X-Admin-Token"}, status_code=403
+            )
+    return await call_next(request)
+
+
+@app.middleware("http")
 async def redaction_count_middleware(request: Request, call_next):
     """Stamp X-Cy-Redacted-Count on responses whose request body was masked.
 

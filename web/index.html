@@ -3819,6 +3819,16 @@
           method,
           headers: { "Content-Type": "application/json" },
         };
+        // /api/* 管理端点需要 X-Admin-Token（2026-09-14 多用户服务器鉴权）；
+        // 服务端 CLI：cyrouter token 可查看。首次访问 prompt 后存 localStorage。
+        if (path.includes("/api/")) {
+          let t = localStorage.getItem("cyRouterAdminToken") || "";
+          if (!t) {
+            t = prompt("Admin Token（服务器 CLI: cyrouter token）") || "";
+            if (t) localStorage.setItem("cyRouterAdminToken", t);
+          }
+          if (t) opts.headers["X-Admin-Token"] = t;
+        }
         // /v1/ and /anthropic/ endpoints require router auth; attach the key
         // when we have it (UI reads the config which contains the key).
         // Use includes (not startsWith) so it works under a reverse-proxy
@@ -3832,6 +3842,11 @@
         }
         if (body) opts.body = JSON.stringify(body);
         const r = await fetch(path, opts);
+        if (r.status === 403 && path.includes("/api/")) {
+          // token 错/过期：清除后下次调用重新 prompt
+          localStorage.removeItem("cyRouterAdminToken");
+          throw new Error("403 admin token 无效（已清除，刷新页面重输）");
+        }
         if (!r.ok) throw new Error(`${r.status} ${r.statusText}`);
         return r.json();
       }

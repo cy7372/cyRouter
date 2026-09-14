@@ -53,11 +53,30 @@ def _server_base() -> str | None:
     return None
 
 
+def _admin_token() -> str:
+    """admin_token：env CYROUTER_ADMIN_TOKEN 优先，否则读本机 config.json。"""
+    import os as _os_mod
+
+    t = _os_mod.environ.get("CYROUTER_ADMIN_TOKEN", "")
+    if t:
+        return t
+    try:
+        import config as _cfg
+
+        return str(_cfg.load_config().get("admin_token", ""))
+    except Exception:  # noqa: BLE001 — 无配置环境按空处理
+        return ""
+
+
 def _http(base: str, method: str, path: str, body: dict | None = None) -> object:
     data = json.dumps(body).encode() if body is not None else None
+    headers = {"Content-Type": "application/json"}
+    tok = _admin_token()
+    if tok:
+        headers["X-Admin-Token"] = tok
     req = urllib.request.Request(
         base + path, data=data, method=method,
-        headers={"Content-Type": "application/json"},
+        headers=headers,
     )
     try:
         with urllib.request.urlopen(req, timeout=_TIMEOUT + 7) as resp:
@@ -69,6 +88,15 @@ def _http(base: str, method: str, path: str, body: dict | None = None) -> object
 
 
 # ── key ────────────────────────────────────────────────────────────────
+
+
+def cmd_token(args) -> None:
+    """显示 admin_token（dashboard 首次访问 / 脚本集成用）。"""
+    tok = _admin_token()
+    if tok:
+        print(tok)
+    else:
+        print("（未设置：服务启动后自动生成于 config.json，重跑本命令查看）")
 
 
 def cmd_key(args) -> None:
@@ -257,6 +285,9 @@ def main(argv: list[str] | None = None) -> int:
     p_revoke = key_sub.add_parser("revoke", help="吊销")
     p_revoke.add_argument("name")
     p_key.set_defaults(func=cmd_key)
+
+    p_tok = sub.add_parser("token", help="显示 admin token（dashboard/调试用）")
+    p_tok.set_defaults(func=cmd_token)
 
     p_cfg = sub.add_parser("config", help="配置读写")
     cfg_sub = p_cfg.add_subparsers(dest="config_cmd", required=True)
