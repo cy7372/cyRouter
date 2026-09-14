@@ -117,41 +117,6 @@ cache-aware 成本比较（见下）。粘性模型不健康或不在可用列�
 compact/新会话自动换 key。此前 pi/opencode 不发 header 导致粘性空转、
 auto 每轮重选反复跳档，每次跳档上游前缀缓存全价重算。
 
-**延迟感知路由（slow-mark，2026-09-14）**：慢而成功的上游对既有四层健康
-信号（配额标记/断路器/链全灭/配额压力）**全部隐形**——都不是错误，只是慢。
-实证：qwen3.8-flash 当日 6~32s 慢慢吞吞答对（pi 的 pre-ask judge 弹框等满
-客户端超时），auto 照单全收。第三维健康信号：`_note_latency`（非流式成功
-路径，4 个 _cb_ok 站点旁）采样完成耗时，门控看**响应侧实际输出 token**
-（usage.completion_tokens / output_tokens ≤ `auto.slow_mark_max_output_tokens`
-=512）且耗时 ≥ `auto.slow_mark_ms`=4000 → `_mark_model_slow`（`_slow_models`，
-基础冷却 120s，复发指数升级 ×2 封顶 64min，静默 4×基础窗口后等级归 1），
-`_is_healthy` 加 `not _is_model_slow` 层 → auto 自动滑到档位 fallback，
-冷却到期后由既有 restore-to-primary 切回。设计约束：①门控必须看响应侧
-usage 而非请求侧 max_tokens——`auto_elevate_max_tokens` 会原地改写 body
-（8→32768），请求侧门控会被打穿；②只参与非流式站点——流式 TTFB 会被
-thinking 模型合法的 60s+ 首 token 慢启动误伤（gate_timeout 90s 的存在
-就是为此）；③无 usage 不标记（绝不猜）；④慢标记只影响 auto 选档，
-客户端钉死模型不受影响；⑤`_note_latency` 永不抛异常（延迟健康不得
-碰坏请求路径）。pi 侧配套：pre-ask judge 超时 3000ms 作纵深保险
-（2026-09-14 8000→3000，网关健康时 judge ~2s 正常自动消化）。测试：
-tests/test_auto_model.py 新增 11 例（标记/双 usage 形状/大输出豁免/
-无 usage 豁免/零阈值禁用/配置覆盖/冷却过期自愈/升级与衰减/事故形状
-端到端 reroute）。V1 已知边界：simple 档两候选同时被标记时
-`_pick_model` 按既有 give-up 路径回落 primary（judge 场景两种路径同为
-3s fail-open 弹框，结果中性；短标记先到期自愈分流）；实测 glm-5.3-flash
-思考深度无界、512 预算偶被吃空重标自身（240s+），属自愈循环非死锁。
-
-**glm-5.3-flash 小预算空响应根因（2026-09-14 同日，勿重蹈）**：pre-ask judge
-（maxTokens=8）当日 6/6 空响应（finish=length、content 空）。探针四组对照定论：
-volcano-apig 对 glm-*-flash **完全忽略** `thinking: {type: disabled}`（三种
-方言都试过），思考照发且**始终计入 max_tokens 预算**——短思考恰好挤进小
-预算则 finish=stop，长思考（如 judge 分类题 90~300 token）必然截空。
-曾误判为「字段存在翻转计账」并在网关加过 glm-flash 丢字段的 repair，
-当日回滚：glm-5.3-flash 双供应商（volcano + zhipu-coding），zhipu 原生
-路由该字段是生效的，丢字段会引入不请自来的思考。正解 = 调用方预算：
-pi 侧 judgeAsk maxTokens 8→512（思考+答案都够，slow-mark 门控
-slow_mark_max_output_tokens=512 仍能覆盖 judge 形态）。
-
 选档除消息长度/工具外还纳入**总上下文大小**：`_estimate_request_tokens`
 估算超 `auto.context_threshold_tokens`（默认 32768）强制 complex 档——
 「继续」式短尾消息 + 巨型历史不会被误投到弱模型。

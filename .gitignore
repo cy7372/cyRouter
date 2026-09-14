@@ -39,11 +39,3 @@ data/*.bak.*
 data/blackbox/
 data/*.bak
 data/config.json.*-bak
-
-# debug residue with secrets (2026-09-14, never track again)
-_rk*.txt
-_hdr*.txt
-_ip*.txt
-_a.json
-
-.playwright-mcp/

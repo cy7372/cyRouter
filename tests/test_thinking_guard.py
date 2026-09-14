@@ -113,4 +113,3 @@ def test_anthropic_empty_content_is_empty():
     assert main._is_empty_response(r, anthropic_shape=True)
     r2 = {"content": [{"type": "text", "text": ""}]}
     assert main._is_empty_response(r2, anthropic_shape=True)
-
