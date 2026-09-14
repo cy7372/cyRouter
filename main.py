@@ -999,9 +999,27 @@ def _apply_param_clamp(body: dict, provider_name: str) -> None:
 
         "param_map": {"reasoning_effort": {"none": "low"}}
 
-    Order: `param_drop` → `param_map` → `param_clamp` (clamp stays the
-    final authority). Only string values are translated; unmapped values
-    pass through untouched. Mutates `body` in place.
+    Cross-vocabulary thinking-disable translation (2026-09-14): GLM-5.x
+    upstreams "always think" and only understand effort levels, but many
+    clients express the disable intent in another dialect — anthropic-style
+    ``thinking: {"type": "disabled"}`` or qwen-style ``enable_thinking:
+    false``. Those fields are dropped/stripped upstream and the intent is
+    silently lost: the model then burns the whole max_tokens budget on
+    reasoning before emitting any visible content (pi's judge hit this
+    30+/day as "truncated at max_tokens"). Opt-in per provider:
+
+        "thinking_disable_translate": "none"   # volcano: param_map then → low
+        "thinking_disable_translate": "low"    # zhipu: rejects "none" outright
+
+    When the disable intent is detected and the client has not set
+    ``reasoning_effort`` itself, it is translated to the configured effort
+    level and the original fields removed. Runs BEFORE drop/map/clamp so
+    the existing per-provider steps keep adapting the value.
+
+    Order: `thinking_disable_translate` → `param_drop` → `param_map` →
+    `param_clamp` (clamp stays the final authority). Only string values are
+    translated; unmapped values pass through untouched. Mutates `body` in
+    place.
     Called per-candidate so each provider in a chain can be tuned separately
     (e.g. kimi code + opencode-go are both kimi-backed and both need
     temperature dropped).
@@ -1009,6 +1027,19 @@ def _apply_param_clamp(body: dict, provider_name: str) -> None:
     p_cfg = _find_provider_cfg(provider_name)
     if not p_cfg:
         return
+    translate_effort = p_cfg.get("thinking_disable_translate")
+    if translate_effort:
+        disabled = False
+        _t = body.get("thinking")
+        if isinstance(_t, dict) and _t.get("type") == "disabled":
+            disabled = True
+        if body.get("enable_thinking") is False:
+            disabled = True
+        if disabled:
+            if "reasoning_effort" not in body:
+                body["reasoning_effort"] = str(translate_effort)
+            body.pop("thinking", None)
+            body.pop("enable_thinking", None)
     drop = p_cfg.get("param_drop")
     if isinstance(drop, list):
         for key in drop:
