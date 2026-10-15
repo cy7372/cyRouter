@@ -2,8 +2,6 @@
 
 LLM API Router — 多供应商路由网关（模型级有序供应商链、故障转移、额度监控、成本记账）。
 
-**本仓库不再托管源码，仅发布 Release。**
-
 - 下载：见 [Releases](https://github.com/cy7372/cyRouter/releases)
   - Windows：`cyRouter-Setup-v<ver>.exe`
   - Linux (deb)：`cyRouter-linux-v<ver>_amd64.deb`
